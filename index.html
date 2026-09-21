@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" manifest="cache.appcache">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GD-RESPAWN • PS4 Host</title>
+<link rel="stylesheet" href="gd-theme.css">
+</head>
+<body>
+<div class="gd-page">
+  <header class="gd-top">
+    <div class="gd-brand">
+      <img src="gd-respawn-logo-lite.png" alt="GD-RESPAWN">
+      <div><strong>GD-RESPAWN</strong><small>BACK TO GAME IN MINUTES</small></div>
+    </div>
+    <div class="gd-ready">● AUTO HOST</div>
+  </header>
+
+  <main class="gd-main">
+    <section class="gd-card">
+      <div class="gd-hero">
+        <img class="gd-logo" src="gd-respawn-logo-lite.png" alt="GD-RESPAWN">
+        <div>
+          <div class="gd-kicker">PROFESSIONAL PS4 HOST</div>
+          <div class="gd-title">GD-<span>RESPAWN</span><br>PS4 HOST</div>
+          <p class="gd-sub">Automatic firmware detection for the updated 13.02 → 13.52 host. The page continues automatically after cache setup — no X button and no manual tap.</p>
+          <div class="gd-info">
+            <div class="gd-box"><small>FIRMWARE</small><strong id="firmware">DETECTING…</strong></div>
+            <div class="gd-box"><small>HOST MODE</small><strong class="ok">AUTO RUN</strong></div>
+            <div class="gd-box"><small>OFFLINE</small><strong class="ok">CACHE READY</strong></div>
+          </div>
+          <div class="gd-status">
+            <div><div id="state" class="gd-status-main">Detecting firmware…</div><div id="detail" class="gd-status-note">Preparing automatic launch.</div></div>
+            <div class="gd-loader"><i></i></div>
+          </div>
+          <div class="gd-phones">
+            <a class="gd-phone" href="tel:01036894272">01036894272</a>
+            <a class="gd-phone blue" href="tel:01036854645">01036854645</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="gd-foot"><span>GD-RESPAWN · PROFESSIONAL CONSOLE REPAIR CENTER</span><span>13.02 · 13.04 · 13.50 · 13.52</span></footer>
+</div>
+
+<script>
+(function(){
+  var stateEl=document.getElementById('state'), detailEl=document.getElementById('detail'), fwEl=document.getElementById('firmware');
+  function setState(t){stateEl.textContent=t;}
+  function setDetail(t){detailEl.textContent=t;}
+
+  var params=new URLSearchParams(location.search);
+  var SUPPORTED={1302:1,1304:1,1350:1,1352:1};
+  var key=null,fwnum=null;
+  var m=/PlayStation\s+4[\/ ](\d+)\.(\d+)/.exec(navigator.userAgent);
+  if(m){
+    var ms=parseInt(m[2],16).toString(16); if(ms.length<2)ms='0'+ms;
+    key=m[1]+'.'+ms; fwnum=parseInt(m[1],10)*100+parseInt(ms,10);
+  }
+  fwEl.textContent=key||'UNKNOWN';
+
+  var forced=params.get('force')==='1';
+  var supported=forced||(fwnum!==null&&SUPPORTED[fwnum]===1);
+  var target='jb.html'+location.search;
+  function go(){setState('Launching host…');setDetail('Opening the jailbreak page automatically.');location.replace(target);}
+  function autoGo(msg,delay){setState(msg);setTimeout(go,delay||0);}
+
+  if(!supported){
+    autoGo('Launching…',250);
+    return;
+  }
+
+  var ac=window.applicationCache;
+  if(!ac||!document.documentElement.hasAttribute('manifest')){
+    go();
+  }else if(!navigator.onLine){
+    setState('Offline cache ready');setDetail('Launching automatically from the saved cache.');go();
+  }else if(ac.status===ac.IDLE){
+    setState('Host ready');setDetail('Launching automatically.');go();
+  }else if(ac.status===ac.UPDATEREADY){
+    try{ac.swapCache();}catch(e){}
+    autoGo('Cache updated',250);
+  }else{
+    setState('Preparing cache…');setDetail('First run or cache update in progress.');
+    ac.addEventListener('downloading',function(){setDetail('Saving files for offline use…');},false);
+    ac.addEventListener('progress',function(e){if(e&&e.total)setDetail('Caching '+Math.round((e.loaded/e.total)*100)+'%');},false);
+    ac.addEventListener('cached',function(){setState('Cache ready');setDetail('Launching automatically.');setTimeout(go,400);},false);
+    ac.addEventListener('updateready',function(){try{ac.swapCache();}catch(e){}setState('Cache updated');setDetail('Launching automatically.');setTimeout(go,400);},false);
+    ac.addEventListener('noupdate',function(){setState('Host ready');setDetail('Launching automatically.');go();},false);
+    ac.addEventListener('error',function(){autoGo('Starting host…',250);},false);
+    ac.addEventListener('obsolete',function(){autoGo('Starting host…',250);},false);
+  }
+})();
+</script>
+</body>
+</html>
